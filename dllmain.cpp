@@ -4,6 +4,10 @@
 
 static Trampoline* EmeraldManager_Main_t = nullptr;
 
+static bool SpatialSounds = false;
+static bool Simultaneous = true;
+static bool NewColors = true;
+
 VoidFunc(sub_458EA0, 0x458EA0);
 VoidFunc(sub_458B90, 0x458B90);
 VoidFunc(DrawEmeraldMark, 0x73A450);
@@ -13,6 +17,7 @@ DataPointer(RenderInfo*, RenderInfoPtr, 0x2670544);
 enum EmeraldHUDs
 {
     EmeraldHud_Off = 4,
+    EemeraldHud_Lock = 7,
     EmeraldHud_Red = 10,
     EmeraldHud_Pink = 12,
     EmeraldHud_Yellow = 13,
@@ -70,31 +75,53 @@ static void EmeraldRader_DisplayItem(int emerald, float distance)
 {
     int sprite;
 
-    if (distance < EmeraldDistances[EmeraldColor_Red])
+    if (NewColors == true)
     {
-        sprite = EmeraldHud_Red;
-    }
-    else if (distance < EmeraldDistances[EmeraldColor_Pink])
-    {
-        sprite = EmeraldHud_Pink;
-    }
-    else if (distance < EmeraldDistances[EmeraldColor_Yellow])
-    {
-        sprite = EmeraldHud_Yellow;
-    }
-    else if (distance < EmeraldDistances[EmeraldColor_Green])
-    {
-        sprite = EmeraldHud_Green;
-    }
-    else if (distance < EmeraldDistances[EmeraldColor_Blue])
-    {
-        sprite = EmeraldHud_Blue;
+        if (distance < EmeraldDistances[EmeraldColor_Red])
+        {
+            sprite = EmeraldHud_Red;
+        }
+        else if (distance < EmeraldDistances[EmeraldColor_Pink])
+        {
+            sprite = EmeraldHud_Pink;
+        }
+        else if (distance < EmeraldDistances[EmeraldColor_Yellow])
+        {
+            sprite = EmeraldHud_Yellow;
+        }
+        else if (distance < EmeraldDistances[EmeraldColor_Green])
+        {
+            sprite = EmeraldHud_Green;
+        }
+        else if (distance < EmeraldDistances[EmeraldColor_Blue])
+        {
+            sprite = EmeraldHud_Blue;
+        }
+        else
+        {
+            sprite = EmeraldHud_Off;
+        }
     }
     else
     {
-        sprite = EmeraldHud_Off;
+        if (distance < EmeraldDistances[EmeraldColor_Red])
+        {
+            sprite = EmeraldHud_Red;
+        }
+        else if (distance < EmeraldDistances[EmeraldColor_Yellow])
+        {
+            sprite = EmeraldHud_Yellow;
+        }
+        else if (distance < EmeraldDistances[EmeraldColor_Blue])
+        {
+            sprite = EmeraldHud_Green;
+        }
+        else
+        {
+            sprite = EmeraldHud_Off;
+        }
     }
-
+   
     if (distance < 30.0f)
     {
         DrawEmeraldMark();
@@ -123,6 +150,8 @@ static void __cdecl EmeraldRadar_Display_r(ObjectMaster* obj)
     RenderInfoPtr->unknown1 = RenderInfoPtr->unknown1 & 0xE3FFFFFF | 0x14000000;
     njSetTexture(wk->TexList);
 
+    int allow = true;
+
     for (int i = 0; i < 3; ++i)
     {
         auto emeinfo = wk->byte2C[i];
@@ -132,13 +161,25 @@ static void __cdecl EmeraldRadar_Display_r(ObjectMaster* obj)
             continue;
         }
 
-        if (TwoPlayerMode == 0)
+        if (allow)
         {
-            EmeraldRader_DisplayItem(i, CheckDistance(&emeinfo.v, &MainCharObj1[0]->Position));
+            if (TwoPlayerMode == 0)
+            {
+                EmeraldRader_DisplayItem(i, CheckDistance(&emeinfo.v, &MainCharObj1[0]->Position));
+            }
+            else
+            {
+                EmeraldRader_DisplayItem(i, CheckDistance(&emeinfo.v, &MainCharObj1[CurrentScreen]->Position));
+            }
         }
         else
         {
-            EmeraldRader_DisplayItem(i, CheckDistance(&emeinfo.v, &MainCharObj1[CurrentScreen]->Position));
+            DrawEmeraldRadar(EemeraldHud_Lock, i, FrameCountIngame);
+        }
+        
+        if (Simultaneous == false)
+        {
+            allow = false;
         }
     }
 
@@ -171,16 +212,21 @@ static void PlayEmeraldSound(NJS_VECTOR* pos, float distance)
             return;
         }
 
-        //Play3DSound_Pos(0x1009, pos, 0, 0, 127);
-
-        PlaySoundProbably(0x1009, 0, 0, 0);
+        if (SpatialSounds == true)
+        {
+            Play3DSound_Pos(0x1009, pos, 0, 0, 25);
+        }
+        else
+        {
+            PlaySoundProbably(0x1009, 0, 0, 0);
+        }
     }
 }
 
 static void __cdecl EmeraldManager_Main_r(ObjectMaster* obj)
 {
     auto wk = EmeraldManagerObj2;
-
+    
     if (wk->Action == 4)
     {
         for (int i = 0; i < 3; ++i)
@@ -208,6 +254,11 @@ static void __cdecl EmeraldManager_Main_r(ObjectMaster* obj)
 
                 PlayEmeraldSound(&emeinfo.v, p1);
             }
+            
+            if (Simultaneous == false)
+            {
+                break;
+            }
         }
     }
 
@@ -220,13 +271,30 @@ extern "C"
 	{
         const IniFile* config = new IniFile(std::string(path) + "\\config.ini");
 
-        WriteJump(EmeraldRadar_Update, EmeraldRadar_Display_r);
-        EmeraldManager_Main_t = new Trampoline(0x739570, 0x739576, EmeraldManager_Main_r, false);
-
-        WriteData<5>((void*)0x739E0D, 0x90);
-        WriteData<5>((void*)0x739DF2, 0x90);
+        SpatialSounds = config->getBool("", "SpatialSounds", SpatialSounds);
+        Simultaneous = config->getBool("", "Simultaneous", Simultaneous);
+        NewColors = config->getBool("", "NewColors", NewColors);
 
         delete config;
+
+        if (NewColors == true)
+        {
+            helperFunctions.ReplaceFile("resource\\gd_PC\\PRS\\kgametex.pak", "resource\\gd_PC\\PRS\\kgametex_BR.pak");
+            helperFunctions.ReplaceFile("resource\\gd_PC\\PRS\\kgametexdz.pak", "resource\\gd_PC\\PRS\\kgametexdz_BR.pak");
+            helperFunctions.ReplaceFile("resource\\gd_PC\\PRS\\kgametexsh.pak", "resource\\gd_PC\\PRS\\kgametexsh_BR.pak");
+        }
+
+        if (Simultaneous == true || NewColors == true)
+        {
+            WriteJump(EmeraldRadar_Update, EmeraldRadar_Display_r);
+        }
+        
+        if (Simultaneous == true || SpatialSounds == true)
+        {
+            EmeraldManager_Main_t = new Trampoline(0x739570, 0x739576, EmeraldManager_Main_r, false);
+            WriteData<5>((void*)0x739E0D, 0x90);
+            WriteData<5>((void*)0x739DF2, 0x90);
+        }
 	}
 
 	__declspec(dllexport) ModInfo SA2ModInfo = { ModLoaderVer };
