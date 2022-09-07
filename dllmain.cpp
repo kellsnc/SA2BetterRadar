@@ -34,7 +34,7 @@ enum EmeraldColors
     EmeraldColor_Blue,
 };
 
-float EmeraldDistances[]
+const float EmeraldDistances[]
 {
     100.0f, // Red
     200.0f, // Pink
