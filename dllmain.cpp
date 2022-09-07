@@ -127,7 +127,7 @@ static void EmeraldRader_DisplayItem(int emerald, float distance)
         DrawEmeraldMark();
     }
 
-    DrawEmeraldRadar(sprite, emerald, FrameCountIngame);
+    DrawEmeraldRadar(sprite, emerald, sprite == EmeraldHud_Red ? FrameCountIngame * 2 : FrameCountIngame);
 }
 
 static void __cdecl EmeraldRadar_Display_r(ObjectMaster* obj)
@@ -197,7 +197,7 @@ static void PlayEmeraldSound(NJS_VECTOR* pos, float distance)
         {
             if (distance <= EmeraldDistances[EmeraldColor_Red])
             {
-                if ((FrameCountIngame & Characters_Tikal) != 0)
+                if ((FrameCountIngame & 0xF) != 0)
                 {
                     return;
                 }
