@@ -13,7 +13,6 @@ VoidFunc(sub_458EA0, 0x458EA0);
 VoidFunc(sub_458B90, 0x458B90);
 VoidFunc(DrawEmeraldMark, 0x73A450);
 VoidFunc(SetDefaultRenderStuff, 0x458EE0);
-DataPointer(RenderInfo*, RenderInfoPtr, 0x2670544);
 
 enum EmeraldHUDs
 {
@@ -43,18 +42,6 @@ float EmeraldDistances[]
     400.0f, // Green
     500.0f, // Blue
 };
-
-static const void* const sub_426420_ptr = (void*)0x00426420;
-static inline void sub_426420(int a1, int a2)
-{
-    __asm
-    {
-        push a2
-        mov eax, a1
-        call sub_426420_ptr
-        add esp, 4
-    }
-}
 
 #pragma optimize("", off)
 //void __usercall DrawEmeraldRadar(int sprite_id@<ecx>, signed int emerald, signed int frame)
@@ -146,9 +133,9 @@ static void __cdecl EmeraldRadar_Display_r(ObjectMaster* obj)
         sub_458B90();
     }
 
-    sub_426420(8, 0);
-
-    RenderInfoPtr->unknown1 = RenderInfoPtr->unknown1 & 0xE3FFFFFF | 0x14000000;
+    njColorBlendingMode(NJD_SOURCE_COLOR, NJD_COLOR_BLENDING_SRCALPHA);
+    njColorBlendingMode(NJD_DESTINATION_COLOR, NJD_COLOR_BLENDING_INVSRCALPHA);
+    
     njSetTexture(wk->TexList);
 
     int allow = true;
