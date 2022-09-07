@@ -270,10 +270,14 @@ extern "C"
 	__declspec(dllexport) void __cdecl Init(const char* path, const HelperFunctions& helperFunctions)
 	{
         const IniFile* config = new IniFile(std::string(path) + "\\config.ini");
+        const IniGroup* configgrp = config->getGroup("");
 
-        SpatialSounds = config->getBool("", "SpatialSounds", SpatialSounds);
-        Simultaneous = config->getBool("", "Simultaneous", Simultaneous);
-        NewColors = config->getBool("", "NewColors", NewColors);
+        if (configgrp)
+        {
+            SpatialSounds = configgrp->getBool("SpatialSounds", SpatialSounds);
+            Simultaneous = configgrp->getBool("Simultaneous", Simultaneous);
+            NewColors = configgrp->getBool("NewColors", NewColors);
+        }
 
         delete config;
 
