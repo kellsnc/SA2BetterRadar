@@ -7,6 +7,7 @@ static Trampoline* EmeraldManager_Main_t = nullptr;
 static bool SpatialSounds = false;
 static bool Simultaneous = true;
 static bool NewColors = true;
+static bool NoAlertIcon = false;
 
 VoidFunc(sub_458EA0, 0x458EA0);
 VoidFunc(sub_458B90, 0x458B90);
@@ -122,7 +123,7 @@ static void EmeraldRader_DisplayItem(int emerald, float distance)
         }
     }
    
-    if (distance < 30.0f)
+    if (NoAlertIcon == false && distance < 30.0f)
     {
         DrawEmeraldMark();
     }
@@ -277,6 +278,7 @@ extern "C"
             SpatialSounds = configgrp->getBool("SpatialSounds", SpatialSounds);
             Simultaneous = configgrp->getBool("Simultaneous", Simultaneous);
             NewColors = configgrp->getBool("NewColors", NewColors);
+            NoAlertIcon = configgrp->getBool("NoAlertIcon", NoAlertIcon);
         }
 
         delete config;
@@ -298,6 +300,11 @@ extern "C"
             EmeraldManager_Main_t = new Trampoline(0x739570, 0x739576, EmeraldManager_Main_r, false);
             WriteData<5>((void*)0x739E0D, 0x90);
             WriteData<5>((void*)0x739DF2, 0x90);
+        }
+
+        if (NoAlertIcon == true)
+        {
+            WriteData((uint8_t*)0x73A450, 0xC3ui8);
         }
 	}
 
