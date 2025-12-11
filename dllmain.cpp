@@ -251,9 +251,9 @@ void DrawRadarBeetle()
         float min_dist = 99999.0f;
         for (int i = 0; i < 2; ++i)
         {
-            float x = beetle_pos[0].x - MainCharObj1[0]->Position.x;
-            float y = beetle_pos[0].y - MainCharObj1[0]->Position.y;
-            float z = beetle_pos[0].z - MainCharObj1[0]->Position.z;
+            float x = beetle_pos[i].x - MainCharObj1[0]->Position.x;
+            float y = beetle_pos[i].y - MainCharObj1[0]->Position.y;
+            float z = beetle_pos[i].z - MainCharObj1[0]->Position.z;
             float dist = sqrtf(x * x + y * y + z * z);
             if (dist < min_dist)
             {
